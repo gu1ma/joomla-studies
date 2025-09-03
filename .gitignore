@@ -1,0 +1,45 @@
+# Joomla specific ignores
+configuration.php
+/cache/
+/tmp/
+/logs/
+/administrator/cache/
+/administrator/logs/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules and build files
+node_modules/
+/media/vendor/
+npm-debug.log*
+
+# Composer
+/vendor/
+composer.lock
+
+# User uploads
+/images/banners/
+/images/headers/
+/images/sampledata/
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup
+*.sql
+*.zip
+
+# OS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
