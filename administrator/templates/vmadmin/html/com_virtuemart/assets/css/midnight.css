@@ -1,0 +1,173 @@
+
+/** MidnightStyle
+ * By Max Milbers
+ * theme
+ * Isis blues #10223e, #1a3867, #3071A9
+ * lightBlue VM 00A1DF
+ * Darkbrown 381f00 381100, 321400
+ * Contrast fff7e9
+ * Green 76a546
+ */
+
+@import "default-white-blue.css";
+
+body {
+    background-color: #381f00!important;
+    color: #76a546!important;
+}
+
+.md-color-cyan-600 {
+    background-color: #381f00;
+    color: #76a546!important;
+}
+
+.md-color-grey-500 {
+    color: #76a546!important;
+}
+
+.subhead {
+    background-color: #381100!important;
+}
+
+.virtuemart-admin-area{
+    background-color: #381f00;
+}
+
+.uk-navbar-container{
+    background-color: #381100!important;
+}
+
+.row0 {
+    background-color: #381100!important;
+}
+
+.row1 {
+    background-color: #381f00!important;
+}
+/*
+.uk-form-horizontal .uk-form-label {
+    margin-right: 5px;
+    margin-top: 4px;
+    text-align: center;
+    min-width: 120px;
+
+}
+
+.uk-form-controls {
+    margin-left: 0px;
+}*/
+
+.uk-width-expand, .uk-form-label {
+    color: #fff7e9!important;
+}
+
+.uk-width-expand a {
+    color: #76a546;
+    text-decoration: underline;
+}
+
+.uk-width-expand a:hover{
+    color: #fffff5;
+}
+
+/*.uk-width-expand a uk-icon-button{
+    color: inherit;
+    text-decoration: underline;
+}*/
+
+.uk-tab > * > a::after {
+    background: #76a546;
+}
+.uk-tab > .uk-active > a {
+    color: #fff7e9;
+}
+
+
+.uk-navbar-item, .uk-navbar-item, .uk-table th{
+    color: #fff7e9!important;
+}
+.uk-button-default {
+    color: #76a546;
+}
+.uk-button-default:hover {
+    color: #76a546;
+}
+
+.uk-label {
+    background-color: #321400!important;
+}
+
+.uk-label-vm {
+    background-color: inherit!important;
+}
+
+.uk-dropdown {
+    background-color: #6b2800!important;
+    color: whitesmoke;
+}
+
+.btn {
+    background-color: #fff7e9!important;
+}
+.btn-success{
+    //background-color: #46a546!important;
+    background-color: #76a546!important;
+}
+.btn-danger {
+    background-color: #bd5a2f!important;
+}
+
+.alert-success {
+    background-color: #4b5825!important;
+    border-color: #6a7c34!important;
+    color: #88c474!important;
+}
+.alert-success h4 {
+    color: #69b550!important;
+}
+
+textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input{
+    background-color: #321400!important;
+    color: #fff7e9!important;
+}
+
+.pagination ul > li > a, .pagination ul > li > span {
+    background-color: #fff7e9!important;
+}
+
+.uk-table-striped tbody tr:nth-of-type(2n+1), .uk-table-striped > tr:nth-of-type(2n+1) {
+    background: #321400;
+    border-top: 1px solid #fff7e9;
+    border-bottom: 1px solid #fff7e9;
+}
+.uk-list-striped > :nth-of-type(2n+1){
+    background: #381100;
+}
+
+.chzn-container .chzn-choices{
+    color: #333 !important;
+    background-color: #321400!important;
+}
+
+.chzn-container .chzn-drop {
+    color: #333 !important;
+    background-color: #321400!important;
+}
+
+.chzn-container-single .chzn-single {
+    color: #fff7e9 !important;
+    background-color: #321400!important;
+}
+
+.chzn-container-single .chzn-single div b {
+    color: #321400;
+}
+
+.chzn-container-multi .chzn-choices li.search-choice {
+    background-color: #76a546!important;
+}
+
+legend {
+    color: #fff7e9!important;
+}
+/* MidnightStyle End */

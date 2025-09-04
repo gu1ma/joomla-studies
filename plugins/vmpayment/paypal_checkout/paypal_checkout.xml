@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<extension version="3.5" type="plugin" group="vmpayment" method="upgrade">
+    <name>PayPal Checkout</name>
+    <creationDate>August 20 2024</creationDate>
+    <author>VirtueMart Development Team</author>
+    <authorUrl>https://virtuemart.net</authorUrl>
+    <copyright>Copyright (C) 2004 - 2024 Virtuemart Team. All rights reserved.</copyright>
+    <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
+    <version>4.2.18</version>
+    <description>PayPal</description>
+    <files>
+        <filename plugin="paypal_checkout">paypal_checkout.php</filename>
+        <folder>fields</folder>
+        <folder>language</folder>
+        <folder>tmpl</folder>
+        <!--folder>paypal</folder-->
+    </files>
+    <vmconfig>
+        <fields name="params">
+            <fieldset name="basic" addfieldpath="/plugins/vmpayment/paypal_checkout/fields">
+                <field name="checkConditionsCore" value="1" default="1" type="hidden"/>
+                <field type="getpaypalccp" default=""/>
+                <field class="dev" name="sandbox" type="radio" default="0" label="VMPAYMENT_PAYPAL_SHOP_MODE"
+                       description="VMPAYMENT_PAYPAL_SHOP_MODE_DESC">
+                    <option value="0">VMPAYMENT_PAYPAL_PRODUCTION</option>
+                    <option value="1">VMPAYMENT_PAYPAL_SANDBOX</option>
+                </field>
+                <field class="sandbox_warning" type="vmtitle" default=""
+                       description="VMPAYMENT_PAYPAL_SANDBOX_WARNING"/>
+                <field class="live" type="text" name="paypal_merchant_email" size="80"
+                       label="VMPAYMENT_PAYPAL_MERCHANT" default=""
+                       description="VMPAYMENT_PAYPAL_MERCHANT_DESC" readonly="true" autocomplete="off"/>
+                <field class="sandbox" type="text" name="sandbox_paypal_merchant_email" size="80"
+                       label="VMPAYMENT_PAYPAL_SANDBOX_MERCHANT" default=""
+                       description="VMPAYMENT_PAYPAL_MERCHANT_DESC" readonly="true" autocomplete="off"/>
+                <field class="live required" type="text" name="paypal_merchant_id" size="80"
+                       label="VMPAYMENT_PAYPAL_MERCHANT_ID" default=""
+                       description="VMPAYMENT_PAYPAL_MERCHANT_ID_DESC" readonly="true" autocomplete="off"/>
+                <field class="sandbox required" type="text" name="sandbox_paypal_merchant_id" size="80"
+                       label="VMPAYMENT_PAYPAL_SANDBOX_MERCHANT_ID" default=""
+                       description="VMPAYMENT_PAYPAL_MERCHANT_ID_DESC" readonly="true" autocomplete="off"/>
+                <field class="live required" name="client_id" type="text" size="80" default=""
+                       label="VMPAYMENT_PAYPAL_CLIENT_ID" readonly="true" autocomplete="off" />
+                <field class="live required" name="client_secret" type="password" size="80" default=""
+                       label="VMPAYMENT_PAYPAL_CLIENT_SECRET" readonly="true" autocomplete="off"/>
+                <field class="sandbox required" name="sandbox_client_id" type="text" size="80" default=""
+                       label="VMPAYMENT_PAYPAL_SANDBOX_CLIENT_ID" readonly="true" autocomplete="off"/>
+                <field class="sandbox required" name="sandbox_client_secret" type="password" size="80" default=""
+                       label="VMPAYMENT_PAYPAL_SANDBOX_CLIENT_SECRET" readonly="true" autocomplete="off"/>
+
+                <field class="" name="paypal_products" type="list" default="buttons"
+                       label="VMPAYMENT_PAYPAL_COMPONENTS" autocomplete="off">
+                    <option value="buttons">VMPAYMENT_PAYPAL_PLUGIN_BUTTONS</option>
+                    <option value="hosted-fields">VMPAYMENT_PAYPAL_PLUGIN_HOSTED_FIELDS</option>
+                    <option value="pui">VMPAYMENT_PAYPAL_PLUGIN_PUI</option>
+                    <option value="sofort">VMPAYMENT_PAYPAL_PLUGIN_SOFORT</option>
+                    <option value="bancontact">Bancontact</option>
+                    <option value="blik">VMPAYMENT_PAYPAL_PLUGIN_BLIK</option>
+                    <option value="eps">VMPAYMENT_PAYPAL_PLUGIN_EPS</option>
+                    <option value="giropay">VMPAYMENT_PAYPAL_PLUGIN_GIROPAY</option>
+                    <option value="ideal">VMPAYMENT_PAYPAL_PLUGIN_IDEAL</option>
+                    <option value="mybank">VMPAYMENT_PAYPAL_PLUGIN_MYBANK</option>
+                    <option value="p24">VMPAYMENT_PAYPAL_PLUGIN_P24</option>
+                    <!--option value="trustly">VMPAYMENT_PAYPAL_PLUGIN_TRUSTLY</option-->
+                    <!--option value="marks">with other fundings</option>
+                    <option value="funding-eligibility">Choose individual payment buttons</option>
+                    <option value="hosted-fields">Shows your own hosted credit and debit card fields</option-->
+                </field>
+                <field class="showPUI hideAPM" name="pui_instructions" type="input" default=""
+                       label="VMPAYMENT_PAYPAL_PUI_INSTRUCTIONS" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field class="hidePUI hideAPM" name="pay_later_messages" type="radio" default="0"
+                       label="VMPAYMENT_PAYPAL_PAY_LATER_MSG" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <!--field class="" name="pay_upon_invoice" type="radio" default="0"
+                       label="VMPAYMENT_PAYPAL_PAY_UPON_INVOICE" description="VMPAYMENT_PAYPAL_PAY_UPON_INVOICE_TIP" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field-->
+                <field class="hidePUI hideAPM" name="disable_funding" type="list" multiple="true" default=""
+                       label="VMPAYMENT_PAYPAL_DISABLE_FUNDING" autocomplete="off">
+                    <option value="card">Credit or debit cards</option>
+                    <option value="credit">PayPal Credit (US, UK)</option>
+                    <option value="paylater">Pay Later (US, UK), Pay in 4 (AU), 4X PayPal (France), Später Bezahlen (Germany)</option>
+                    <option value="bancontact">Bancontact</option>
+                    <option value="blik">BLIK</option>
+                    <option value="eps">eps</option>
+                    <option value="giropay">giropay</option>
+                    <option value="ideal">iDEAL</option>
+                    <option value="mercadopago">Mercado Pago</option>
+                    <option value="mybank">MyBank</option>
+                    <option value="p24">Przelewy24</option>
+                    <option value="sepa">SEPA-Lastschrift</option>
+                    <option value="sofort">Sofort</option>
+                    <option value="trustly">Trustly</option>
+                    <option value="venmo">Venmo</option>
+                </field>
+                <field class="hidePUI hideAPM" name="enable_funding" type="list" multiple="true" default=""
+                       label="VMPAYMENT_PAYPAL_ENABLE_FUNDING" autocomplete="off">
+                    <option value="paylater">Pay Later (US, UK), Pay in 4 (AU), 4X PayPal (France), Später Bezahlen (Germany)</option>
+                    <option value="venmo">Venmo</option>
+
+                    <option value="card">Credit or debit cards</option>
+                    <option value="credit">PayPal Credit (US, UK)</option>
+                    <option value="bancontact">Bancontact</option>
+                    <option value="blik">BLIK</option>
+                    <option value="eps">eps</option>
+                    <option value="giropay">giropay</option>
+                    <option value="ideal">iDEAL</option>
+                    <option value="mercadopago">Mercado Pago</option>
+                    <option value="mybank">MyBank</option>
+                    <option value="p24">Przelewy24</option>
+                    <option value="sepa">SEPA-Lastschrift</option>
+                    <option value="sofort">Sofort</option>
+                    <option value="trustly">Trustly</option>
+                </field>
+                <field class="hidePUI hideAPM showHosted" name="paypal_intent" type="list" default="capture"
+                       label="VMPAYMENT_PAYPAL_INTENT" autocomplete="off">
+                    <option value="capture">The funds are captured immediately while the buyer is present on your site</option>
+                    <option value="authorize">The funds are authorized immediately and then reauthorized or captured later</option>
+                    <!--option value="subscription">This is a subscription transaction</option>
+                    <option value="tokenize">this is a billing (without purchase) transaction</option-->
+                </field>
+
+                <field type="vmtitle" default="VMPAYMENT_PAYPAL_ORDER_STATUS_SECTION"
+                       description="VMPAYMENT_PAYPAL_ORDER_STATUS_SECTION_DESC"/>
+                <field class="" name="allow_status_refunds" type="list" default="1"
+                       label="VMPAYMENT_PAYPAL_STATUS_ALLOW_REFUNDS" description="VMPAYMENT_PAYPAL_STATUS_ALLOW_REFUNDS_DESC">
+                    <option value="0">COM_VIRTUEMART_NO</option>
+                    <option value="1">COM_VIRTUEMART_YES</option>
+                </field>
+                <field name="status_success" type="vmorderstate" scope="com_virtuemart" default="C"
+                       label="VMPAYMENT_PAYPAL_STATUS_SUCCESS" description="VMPAYMENT_PAYPAL_STATUS_SUCCESS_TIP"/>
+                <field name="status_confirmed" type="vmorderstate" scope="com_virtuemart" default="U"
+                       label="VMPAYMENT_PAYPAL_STATUS_CONFIRMED_BY_SHOPPER" description="VMPAYMENT_PAYPAL_STATUS_CONFIRMED_BY_SHOPPER_TIP"/>
+                <field name="status_canceled" type="vmorderstate" scope="com_virtuemart" default="X"
+                       label="VMPAYMENT_PAYPAL_STATUS_CANCEL" description="VMPAYMENT_PAYPAL_STATUS_CANCEL_TIP"/>
+                <field name="status_refunded" type="vmorderstate" scope="com_virtuemart" default="R"
+                       label="VMPAYMENT_PAYPAL_STATUS_REFUND" description="VMPAYMENT_PAYPAL_STATUS_REFUND_TIP"/>
+                <field name="status_dispute" type="vmorderstate" scope="com_virtuemart" default="X"
+                       label="VMPAYMENT_PAYPAL_STATUS_DISPUTE"
+                       description="VMPAYMENT_PAYPAL_STATUS_DISPUTE_TIP"/>
+                <field name="status_denied" type="vmorderstate" scope="com_virtuemart" default="D"
+                       label="COM_VIRTUEMART_ORDER_STATUS_DENIED" description="COM_VIRTUEMART_ORDER_STATUS_DENIED_TIP"/>
+                <field type="vmtitle" default="VMPAYMENT_PAYPAL_FEATURE_SECTION"
+                       description="VMPAYMENT_PAYPAL_FEATURE_SECTION_DESC"/>
+                <field class="hidePUI hideAPM" name="shipping_preference" type="radio" default="0"
+                       label="VMPAYMENT_PAYPAL_SHIPPING_PREV" autocomplete="off">
+                    <option value="0">VMPAYMENT_PAYPAL_BY_CART_WEIGHT</option>
+                    <option value="SET_PROVIDED_ADDRESS">Use Address</option>
+                    <option value="NO_SHIPPING">No shipping</option>
+                </field>
+                <field class="hidePUI" name="withBreakdown" type="radio" default="1"
+                       label="VMPAYMENT_PAYPAL_WITH_BREAKDOWN" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field class="hidePUI hideAPM" name="button_show" type="radio" default="1"
+                       label="VMPAYMENT_PAYPAL_SHOW_BTN" autocomplete="off">
+                    <option value="2">JNO</option>
+                    <option value="0">VMPAYMENT_PAYPAL_SHOW_BTN_CART_ONLY</option>
+                    <option value="1">VMPAYMENT_PAYPAL_SHOW_BTN_ANY</option>
+                </field>
+                <field class="hidePUI hideAPM" name="button_for_login" type="radio" default="1"
+                       label="VMPAYMENT_PAYPAL_LOGIN" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field type="vmtitle" default="VMPAYMENT_PAYPAL_BUTTON_SECTION"
+                       description="VMPAYMENT_PAYPAL_BUTTON_SECTION_DESC"/>
+                <!--field class="hidePUI hideAPM showHosted" name="button_styles" type="textfield" default=""
+                       label="VMPAYMENT_PAYPAL_BT_STYLES" autocomplete="off">
+                </field-->
+                <field class="hidePUI hideAPM" name="button_layout" type="list" default="horizontal"
+                       label="VMPAYMENT_PAYPAL_BT_LAYOUT" autocomplete="off" >
+                    <option value="vertical">Buttons are stacked vertically with a maximum of six buttons</option>
+                    <option value="horizontal">Buttons are stacked horizontally with a maximum of two buttons</option>
+                </field>
+                <field class="hidePUI hideAPM" name="button_tagline" type="list" default="true"
+                       label="VMPAYMENT_PAYPAL_BT_TAGLINE" autocomplete="off">
+                    <option value="true">Show text below button</option>
+                    <option value="false">No text below button</option>
+                </field>
+                <field class="hidePUI hideAPM" name="button_color" type="list" default="gold"
+                       label="VMPAYMENT_PAYPAL_BT_COLOR" autocomplete="off">
+                    <option value="gold">Gold. Recommended</option>
+                    <option value="blue">Blue, first alternative</option>
+                    <option value="silver">Silver</option>
+                    <option value="white">White</option>
+                    <option value="black">Black</option>
+                </field>
+                <field class="hidePUI hideAPM" name="button_shape" type="list" default="rect"
+                       label="VMPAYMENT_PAYPAL_BT_SHAPE" autocomplete="off">
+                    <option value="rect">Rectengular, recommended</option>
+                    <option value="pill">Pillow</option>
+                </field>
+                <field class="hidePUI hideAPM" name="button_label" type="list" default="rect"
+                       label="VMPAYMENT_PAYPAL_BT_LABEL" autocomplete="off">
+                    <option value="paypal">Displays the PayPal logo</option>
+                    <option value="checkout">Displays the Checkout button</option>
+                    <!--option value="buynow">Displays the PayPal Buy Now button and initializes the checkout flow</option-->
+                    <!--option value="pay">Displays the Pay With PayPal button and initializes the checkout flow</option-->
+                    <!--option value="installment">Displays the PayPal installment button and offers a specified number of payments during a payment installment period</option-->
+                </field>
+
+                <field class="" name="orderDoneItemId" type="text" size="20" default=""
+                       label="VMPAYMENT_PAYPAL_ORDERDONE_ITEMID" readonly="false" autocomplete="off" />
+                <field class="" name="paypal_debug" type="radio" default="0"
+                       label="VMPAYMENT_PAYPAL_DEBUG" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field class="" name="paypal_developer" type="radio" default="0"
+                       label="VMPAYMENT_PAYPAL_DEVELEOPER" autocomplete="off">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <!--field class="live" name="webHookId" type="input" readonly="true"
+                       label="WebHook Id" autocomplete="off">
+                </field>
+                <field class="live" name="webHookUrl" type="input" readonly="true" width="300px"
+                       label="WebHook URL" autocomplete="off">
+                </field>
+                <field class="sandbox" name="sandbox_webHookId" type="input" readonly="true"
+                       label="Sandbox WebHook Id" autocomplete="off">
+                </field>
+                <field class="sandbox" name="sandbox_webHookUrl" type="input" readonly="true" width="300px"
+                       label="Sandbox WebHook URL" autocomplete="off">
+                </field-->
+            </fieldset>
+        </fields>
+    </vmconfig>
+    <updateservers>
+        <!-- Note: No spaces or linebreaks allowed between the server tags -->
+        <server type="extension" name="VirtueMart plg_vmpayment_paypal_checkout Update Site"><![CDATA[http://virtuemart.net/releases/vm3/plg_vmpayment_paypal_checkout_update.xml]]></server>
+    </updateservers>
+</extension>

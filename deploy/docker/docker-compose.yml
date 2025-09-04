@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  joomla:
+    build: 
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    container_name: joomla-app
+    ports:
+      - "8080:80"
+    volumes:
+      - joomla_data:/var/www/html/images
+      - joomla_logs:/var/www/html/administrator/logs
+    environment:
+      - JOOMLA_DB_HOST=mysql
+      - JOOMLA_DB_USER=joomla
+      - JOOMLA_DB_PASSWORD=joomla_password
+      - JOOMLA_DB_NAME=joomla_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - joomla-network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: joomla-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=joomla_db
+      - MYSQL_USER=joomla
+      - MYSQL_PASSWORD=joomla_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - joomla-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: joomla-phpmyadmin
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=joomla
+      - PMA_PASSWORD=joomla_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - joomla-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: joomla-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - joomla-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+  joomla_data:
+    driver: local
+  joomla_logs:
+    driver: local
+
+networks:
+  joomla-network:
+    driver: bridge

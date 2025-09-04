@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<metadata>
+	<layout title="COM_VIRTUEMART_VIRTUEMART_VIEW_DEFAULT_TITLE">
+	<message><![CDATA[COM_VIRTUEMART_VIRTUEMART_VIEW_DEFAULT_TITLE_DESC]]></message>
+	</layout>
+	<state>
+		<name>COM_VIRTUEMART_VIRTUEMART_VIEW_DEFAULT_TITLE</name>
+		<description><![CDATA[COM_VIRTUEMART_VIRTUEMART_VIEW_DEFAULT_TITLE_DESC]]></description>
+	</state>
+	<fields name="request">
+		<fieldset name="request" >
+			<field name="managing" type="radio"
+				   default="1"
+				   label="COM_VIRTUEMART_MANAGE" required="true"
+				   extension="com_virtuemart"
+				   description="COM_VIRTUEMART_MANAGE" >
+				<option value="1">JYES</option>
+				<option value="0">JNO</option>
+			</field>
+		</fieldset>
+	</fields>
+</metadata>
+
+

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<extension version="3.5" type="plugin" group="vmshipment" method="upgrade">
+    <name>OTSHIPMENT_RULES_ADV</name>
+    <creationDate>2016-02-15</creationDate>
+    <author>Reinhold Kainhofer</author>
+    <authorUrl>http://www.open-tools.net</authorUrl>
+    <copyright>Copyright (C) 2013-2014, Reinhold Kainhofer</copyright>
+    <license>GPL v3+</license>
+    <version>6.2.4</version>
+    <description>OTSHIPMENT_RULES_ADV_DESC</description>
+    <files>
+        <filename plugin="rules_shipping_advanced">rules_shipping_advanced.php</filename>
+        <filename>rules_shipping_base.php</filename>
+        <filename>rules_shipping_framework_joomla.php</filename>
+        <folder>language</folder>
+        <folder>library</folder>
+        <folder>fields</folder>
+    </files>
+    <languages folder="language">
+        <language tag="en-GB">en-GB/en-GB.plg_vmshipment_rules_shipping_advanced.ini</language>
+        <language tag="en-GB">en-GB/en-GB.plg_vmshipment_rules_shipping_advanced.sys.ini</language>
+    </languages>
+    <scriptfile>rules_shipping_advanced.script.php</scriptfile>
+
+    <!-- VM 3.0 support (fields rather than params): -->
+    <vmconfig>
+        <fields name="params" addfieldpath="/plugins/vmshipment/rules_shipping_advanced/fields">
+            <fieldset name="shipment" label="OTSHIPMENT_RULES_PLUGIN_ADV" addfieldpath="/administrator/components/com_virtuemart/fields">
+                <field type="vmcurl"/>
+                <field name="checkConditionsCore" value="1" default="1" type="hidden"/>
+                <field type="spacer" default="OTSHIPMENT_RULES_PLUGIN_ADV" level="level1"/>
+                <field name="shipment_logos" type="imagelist" label="OTSHIPMENT_RULES_LOGOS"
+                    description="OTSHIPMENT_RULES_LOGOS_DESC" multiple="true"
+                    directory="/images/virtuemart/shipment"
+                    default="" hide_default="1" hide_none="1"
+                    stripext="0"   exclude="^_" />
+                <field name="weight_unit" type="vmweightunit" size="10" default="" label="OTSHIPMENT_RULES_WEIGHT_UNIT" description="OTSHIPMENT_RULES_WEIGHT_UNIT_DESC"/>
+                <field name="length_unit" type="vmlengthunit" size="10" default="" label="OTSHIPMENT_RULES_LENGTH_UNIT" description="OTSHIPMENT_RULES_LENGTH_UNIT_DESC"/>
+                <field type="vmtitle" default="" description='OTSHIPMENT_RULES_HELP_ADV' />
+            </fieldset>
+
+            <fieldset name="countryzone1" label="OTSHIPMENT_RULES_COUNTRIES1_LABEL">
+                <field name="countries1" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id1" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules1" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone2" label="OTSHIPMENT_RULES_COUNTRIES2_LABEL">
+                <field name="countries2" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id2" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules2" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone3" label="OTSHIPMENT_RULES_COUNTRIES3_LABEL">
+                <field name="countries3" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id3" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules3" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone4" label="OTSHIPMENT_RULES_COUNTRIES4_LABEL">
+                <field name="countries4" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id4" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules4" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone5" label="OTSHIPMENT_RULES_COUNTRIES5_LABEL">
+                <field name="countries5" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id5" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules5" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone6" label="OTSHIPMENT_RULES_COUNTRIES6_LABEL">
+                <field name="countries6" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id6" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules6" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone7" label="OTSHIPMENT_RULES_COUNTRIES7_LABEL">
+                <field name="countries7" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id7" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules7" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+            <fieldset name="countryzone8" label="OTSHIPMENT_RULES_COUNTRIES8_LABEL">
+                <field name="countries8" type="vmcountries" multiple="true" scope="com_virtuemart" default="" label="OTSHIPMENT_RULES_COUNTRIES" description="OTSHIPMENT_RULES_COUNTRIES_DESC"/>
+                <field name="tax_id8" type="vmtaxes" scope="com_virtuemart"  label="OTSHIPMENT_RULES_TAX" description="OTSHIPMENT_RULES_TAX_DESC" />
+                <field name="rules8" type="textarea" rows="6" cols="80"  label="OTSHIPMENT_RULES_RULES" description="OTSHIPMENT_RULES_RULES_DESC" />
+            </fieldset>
+
+        </fields>
+    </vmconfig>
+
+
+    <config>
+        <fields name="params">
+            <fieldset name="update_credentials" label="OPENTOOLS_FIELDSET_CREDENTIALS" addfieldpath="/plugins/vmshipment/rules_shipping_advanced/fields">
+                <field name="credentials_desc" type="spacer" label="OPENTOOLS_CREDENTIALS_DESC" />
+                <field name="order_number" type="text" default="" label="OPENTOOLS_ORDERNUMBER" description="OPENTOOLS_ORDERNUMBER_DESC"/>
+                <field name="order_pass" type="text" default="" label="OPENTOOLS_ORDERPASS" description="OPENTOOLS_ORDERPASS_DESC"/>
+				<field name="update_credentials_checked" type="vmUpdateCredentialsCheck" label="" ajaxurl="index.php?option=com_virtuemart&amp;view=plugin&amp;type=vmshipment&amp;name=rules_shipping_advanced&amp;format=raw" />
+            </fieldset>
+		</fields>
+    </config>
+	<updateservers>
+		<server type="extension" name="VM Advanced Shipping by Rules Updates"><![CDATA[http://open-tools.net/UpdateServer/index.php?package=Joomla&amp;extension=AdvancedShippingByRules&amp;file=extension.xml]]></server>
+	</updateservers>
+
+</extension>

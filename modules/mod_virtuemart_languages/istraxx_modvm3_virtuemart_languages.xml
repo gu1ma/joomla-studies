@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<updates>
+    <update>
+        <name>${PHING.NAME}</name>
+        <description>${PHING.DESCRIPTION}</description>
+        <element>${PHING.FILENAME}</element>
+        <type>module</type>
+        <version>${PHING.VERSION}</version>
+        <infourl title="VirtueMart Extensions ${PHING.FILENAME}">http://extensions.virtuemart.net/my-orders</infourl>
+        <tags>
+            <tag>stable</tag>
+        </tags>
+        <maintainer>${PHING.COMPANY.LONG}</maintainer>
+        <maintainerurl>${PHING.AUTHORURL}</maintainerurl>
+        <targetplatform name="joomla" version=".*" />
+    </update>
+</updates>

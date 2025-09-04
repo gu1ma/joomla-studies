@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<metadata>
+	<layout title="COM_VIRTUEMART_MANAGE_PRODUCTS_TITLE">
+            <message><![CDATA[COM_VIRTUEMART_MANAGE_PRODUCTS_DESC]]></message>
+	</layout>
+	<fields name="request">
+        <fieldset name="request" >
+        	<field name="managing" type="hidden"
+                   default="1"
+                   label="COM_VIRTUEMART_MANAGE" required="true"
+                   extension="com_virtuemart"
+                   description="COM_VIRTUEMART_MANAGE_DESCR" >
+            </field>
+			<field name="task" type="radio"
+				   default="0"
+				   label="COM_VIRTUEMART_MANAGE_ADD_PRODUCT" required="false"
+				   extension="com_virtuemart"
+				   description="COM_VIRTUEMART_MANAGE_ADD_PRODUCT_DESCR" >
+				<option value="edit">JYES</option>
+				<option value="0">JNO</option>
+			</field>
+		</fieldset>
+    </fields>
+</metadata>

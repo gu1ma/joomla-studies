@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE install PUBLIC "-//Joomla! 2.5//DTD template 1.0//EN" "https://www.joomla.org/xml/dtd/2.5/template-install.dtd">
+<extension version="3.5" type="template" client="administrator" method="upgrade">
+	<name>vmadmin</name>
+	<creationDate>28 January 2021</creationDate>
+	<author>by the VirtueMart team</author>
+	<authorEmail>max@virtuemart.net</authorEmail>
+	<authorUrl>http://virtuemart.net</authorUrl>
+	<copyright>Copyright (C) 2004 - 2022 Virtuemart Team, Inc. All rights reserved.</copyright>
+	<license>http://www.gnu.org/copyleft/gpl.html GNU/GPL; see LICENSE.txt</license>
+	<version>4.2.18</version>
+	<description>New administration template for VirtueMart. Enable the template in the virtuemart config on the first tab, section "Advanced".</description>
+
+	<files>
+		<folder>html</folder>
+	</files>
+    <updateservers>
+        <!-- Note: No spaces or linebreaks allowed between the server tags -->
+        <server type="extension" name="VirtueMart Administrator Template Update Site"><![CDATA[http://virtuemart.net/releases/vm3/vmadmin.xml]]></server>
+    </updateservers>
+
+</extension>
