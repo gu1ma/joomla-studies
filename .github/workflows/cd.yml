@@ -1,0 +1,243 @@
+name: CD - Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  PHP_VERSION: 8.2
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ env.PHP_VERSION }}
+        extensions: mysqli, pdo_mysql, gd, zip, xml, mbstring, curl, intl
+        tools: composer
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+
+    - name: Install dependencies
+      run: |
+        if [ -f composer.json ]; then
+          composer install --no-dev --optimize-autoloader --no-interaction
+        fi
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+      if: hashFiles('package.json') != ''
+
+    - name: Install and build frontend assets
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+          npm run build
+        fi
+      if: hashFiles('package.json') != ''
+
+    - name: Create deployment artifact
+      run: |
+        # Remove development files
+        rm -rf .git .github node_modules tests
+        
+        # Create artifact
+        tar -czf joomla-build.tar.gz \
+          --exclude='.env*' \
+          --exclude='*.log' \
+          --exclude='tmp/*' \
+          --exclude='cache/*' \
+          --exclude='logs/*' \
+          .
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: joomla-build
+        path: joomla-build.tar.gz
+        retention-days: 30
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.your-domain.com
+    
+    steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: joomla-build
+
+    - name: Deploy to staging server
+      env:
+        STAGING_HOST: ${{ secrets.STAGING_HOST }}
+        STAGING_USER: ${{ secrets.STAGING_USER }}
+        STAGING_PATH: ${{ secrets.STAGING_PATH }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        # Setup SSH
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H $STAGING_HOST >> ~/.ssh/known_hosts
+
+        # Deploy files
+        scp -i ~/.ssh/deploy_key joomla-build.tar.gz $STAGING_USER@$STAGING_HOST:/tmp/
+        
+        ssh -i ~/.ssh/deploy_key $STAGING_USER@$STAGING_HOST << 'EOF'
+          cd ${{ secrets.STAGING_PATH }}
+          
+          # Backup current version
+          if [ -d "current" ]; then
+            cp -r current backup-$(date +%Y%m%d-%H%M%S)
+          fi
+          
+          # Extract new version
+          tar -xzf /tmp/joomla-build.tar.gz -C /tmp/joomla-deploy/
+          
+          # Update files (preserve configuration and uploads)
+          cp current/configuration.php /tmp/joomla-deploy/ 2>/dev/null || true
+          cp -r current/images/uploads /tmp/joomla-deploy/images/ 2>/dev/null || true
+          
+          # Switch to new version
+          rm -rf current
+          mv /tmp/joomla-deploy current
+          
+          # Set permissions
+          chown -R www-data:www-data current
+          chmod -R 755 current
+          chmod 644 current/configuration.php
+          
+          # Clear cache
+          rm -rf current/cache/*
+          rm -rf current/tmp/*
+          
+          # Run any database migrations
+          cd current
+          # php cli/joomla.php database:migrate
+          
+          echo "Staging deployment completed"
+        EOF
+
+  deploy-production:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://your-domain.com
+    
+    steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: joomla-build
+
+    - name: Deploy to production server
+      env:
+        PROD_HOST: ${{ secrets.PROD_HOST }}
+        PROD_USER: ${{ secrets.PROD_USER }}
+        PROD_PATH: ${{ secrets.PROD_PATH }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        # Setup SSH
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
+
+        # Deploy files with zero-downtime strategy
+        scp -i ~/.ssh/deploy_key joomla-build.tar.gz $PROD_USER@$PROD_HOST:/tmp/
+        
+        ssh -i ~/.ssh/deploy_key $PROD_USER@$PROD_HOST << 'EOF'
+          cd ${{ secrets.PROD_PATH }}
+          
+          # Create releases directory if not exists
+          mkdir -p releases
+          
+          # Create new release directory
+          RELEASE_DIR="releases/$(date +%Y%m%d-%H%M%S)"
+          mkdir -p $RELEASE_DIR
+          
+          # Extract new version
+          tar -xzf /tmp/joomla-build.tar.gz -C $RELEASE_DIR/
+          
+          # Preserve shared files
+          if [ -L current ]; then
+            CURRENT_RELEASE=$(readlink current)
+            cp $CURRENT_RELEASE/configuration.php $RELEASE_DIR/
+            cp -r $CURRENT_RELEASE/images/uploads $RELEASE_DIR/images/ 2>/dev/null || true
+          fi
+          
+          # Set permissions
+          chown -R www-data:www-data $RELEASE_DIR
+          chmod -R 755 $RELEASE_DIR
+          chmod 644 $RELEASE_DIR/configuration.php
+          
+          # Switch to new version (atomic operation)
+          ln -nfs $RELEASE_DIR current-temp
+          mv current-temp current
+          
+          # Clear cache
+          rm -rf current/cache/*
+          rm -rf current/tmp/*
+          
+          # Run database migrations
+          cd current
+          # php cli/joomla.php database:migrate
+          
+          # Keep only last 5 releases
+          cd ../releases
+          ls -t | tail -n +6 | xargs rm -rf
+          
+          echo "Production deployment completed"
+        EOF
+
+  notify:
+    name: Notify Deployment
+    needs: [deploy-staging, deploy-production]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success'
+      run: |
+        echo "Deployment successful!"
+        # Add your notification logic here (Slack, Discord, email, etc.)
+        
+    - name: Notify failure
+      if: needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure'
+      run: |
+        echo "Deployment failed!"
+        # Add your notification logic here

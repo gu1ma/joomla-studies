@@ -1,0 +1,203 @@
+name: CI - Test and Validate
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  php-tests:
+    name: PHP Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2, 8.3]
+        mysql-version: [8.0]
+    
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql-version }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: joomla_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: mysqli, pdo_mysql, gd, zip, xml, mbstring, curl, intl
+        coverage: xdebug
+        tools: composer
+
+    - name: Validate composer.json
+      run: |
+        if [ -f composer.json ]; then
+          composer validate --strict
+        else
+          echo "No composer.json found, skipping validation"
+        fi
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install dependencies
+      run: |
+        if [ -f composer.json ]; then
+          composer install --prefer-dist --no-progress --no-suggest
+        else
+          echo "No composer.json found, skipping install"
+        fi
+
+    - name: PHP Syntax Check
+      run: find . -name "*.php" -not -path "./vendor/*" -not -path "./node_modules/*" | xargs -I {} php -l {}
+
+    - name: Check PHP coding standards
+      run: |
+        if [ -f composer.json ] && composer show | grep -q "phpcs"; then
+          ./vendor/bin/phpcs --standard=PSR12 --extensions=php --ignore=vendor/,node_modules/ .
+        else
+          echo "PHPCS not installed, skipping coding standards check"
+        fi
+
+    - name: Run PHP unit tests
+      run: |
+        if [ -f phpunit.xml ] || [ -f phpunit.xml.dist ]; then
+          ./vendor/bin/phpunit
+        else
+          echo "No PHPUnit configuration found, skipping tests"
+        fi
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        tools: composer
+
+    - name: Security vulnerabilities scan
+      run: |
+        if [ -f composer.lock ]; then
+          composer audit
+        else
+          echo "No composer.lock found, skipping security scan"
+        fi
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+
+    - name: Install dependencies
+      run: |
+        if [ -f composer.json ]; then
+          composer install --prefer-dist --no-progress
+        fi
+
+    - name: Run PHPStan
+      run: |
+        if [ -f composer.json ] && composer show | grep -q "phpstan"; then
+          ./vendor/bin/phpstan analyse
+        else
+          echo "PHPStan not installed, skipping static analysis"
+        fi
+
+  joomla-validation:
+    name: Joomla Specific Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: mysqli, pdo_mysql, gd, zip, xml, mbstring, curl, intl
+
+    - name: Validate Joomla structure
+      run: |
+        # Check for required Joomla files
+        required_files=("index.php" "configuration.php" "htaccess.txt" "web.config.txt")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Error: Required Joomla file '$file' not found"
+            exit 1
+          fi
+        done
+        echo "All required Joomla files are present"
+
+    - name: Check Joomla version compatibility
+      run: |
+        if grep -q "JOOMLA_MINIMUM_PHP.*8\.1" index.php; then
+          echo "✓ Joomla version supports PHP 8.1+"
+        else
+          echo "⚠ Check Joomla version compatibility"
+        fi
+
+    - name: Validate XML manifests
+      run: |
+        find . -name "*.xml" -not -path "./vendor/*" | while read xml_file; do
+          if ! xmllint --noout "$xml_file" 2>/dev/null; then
+            echo "Invalid XML file: $xml_file"
+          fi
+        done
+
+  frontend-build:
+    name: Frontend Assets Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+      if: hashFiles('package.json') != ''
+
+    - name: Install dependencies
+      run: npm ci
+      if: hashFiles('package.json') != ''
+
+    - name: Build assets
+      run: npm run build
+      if: hashFiles('package.json') != ''
+
+    - name: Check for build artifacts
+      run: |
+        if [ -d "media" ]; then
+          echo "✓ Media directory exists"
+        else
+          echo "⚠ No media directory found"
+        fi
