@@ -44,6 +44,28 @@ cd "$DEPLOY_DIR"
 echo "Stopping existing containers..."
 docker-compose down --remove-orphans 2>/dev/null || true
 
+# Check what's using port 80 and stop it
+echo "Checking port 80 usage..."
+if sudo lsof -i :80 >/dev/null 2>&1; then
+    echo "Port 80 is in use. Checking what's using it..."
+    sudo lsof -i :80
+    
+    # Stop Apache if it's running
+    sudo systemctl stop apache2 2>/dev/null || true
+    sudo service apache2 stop 2>/dev/null || true
+    
+    # Stop nginx if it's running
+    sudo systemctl stop nginx 2>/dev/null || true
+    sudo service nginx stop 2>/dev/null || true
+    
+    # Kill any process using port 80
+    sudo fuser -k 80/tcp 2>/dev/null || true
+    
+    echo "Cleared port 80"
+else
+    echo "Port 80 is available"
+fi
+
 # Clean up old images (keep last 3)
 echo "Cleaning up old Docker images..."
 docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" | grep "joomla-app" | tail -n +4 | awk '{print $3}' | xargs -r docker rmi 2>/dev/null || true
