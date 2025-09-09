@@ -42,7 +42,7 @@ jobs:
         tar -czf deployment-package.tar.gz deployment/
 
     - name: Upload deployment artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-package
         path: deployment-package.tar.gz
@@ -75,7 +75,7 @@ jobs:
         echo "VM IP: $VM_IP"
 
     - name: Download deployment artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: deployment-package
 
