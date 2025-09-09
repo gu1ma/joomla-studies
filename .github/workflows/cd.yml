@@ -65,10 +65,40 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Get VM IP
+    - name: Ensure VM exists and get IP
       id: get-ip
       run: |
-        VM_IP=$(gcloud compute instances describe joomla-staging \
+        # Check if VM exists, create if it doesn't
+        if ! gcloud compute instances describe joomla-server --zone=${{ env.ZONE }} >/dev/null 2>&1; then
+          echo "VM joomla-server not found. Creating it..."
+          gcloud compute instances create joomla-server \
+            --zone=${{ env.ZONE }} \
+            --machine-type=f1-micro \
+            --network-tier=PREMIUM \
+            --subnet=default \
+            --maintenance-policy=MIGRATE \
+            --tags=http-server,https-server \
+            --image=ubuntu-2004-focal-v20231213 \
+            --image-project=ubuntu-os-cloud \
+            --boot-disk-size=30GB \
+            --boot-disk-type=pd-standard
+          
+          echo "VM created. Waiting for it to be ready..."
+          sleep 60
+          
+          # Run setup script on new VM
+          gcloud compute ssh joomla-server --zone=${{ env.ZONE }} --command="
+            sudo apt update && \
+            curl -fsSL https://get.docker.com -o get-docker.sh && \
+            sudo sh get-docker.sh && \
+            sudo usermod -aG docker \$USER && \
+            sudo mkdir -p /opt/joomla && \
+            sudo chown -R \$USER:\$USER /opt/joomla
+          "
+        fi
+        
+        # Get VM IP
+        VM_IP=$(gcloud compute instances describe joomla-server \
           --zone=${{ env.ZONE }} \
           --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
         echo "vm-ip=$VM_IP" >> $GITHUB_OUTPUT
@@ -91,10 +121,10 @@ jobs:
         gcloud compute config-ssh
 
         # Copy deployment package to VM
-        gcloud compute scp deployment-package.tar.gz joomla-staging:/tmp/ --zone=${{ env.ZONE }}
+        gcloud compute scp deployment-package.tar.gz joomla-server:/tmp/ --zone=${{ env.ZONE }}
 
         # Deploy on VM
-        gcloud compute ssh joomla-staging --zone=${{ env.ZONE }} --command="
+        gcloud compute ssh joomla-server --zone=${{ env.ZONE }} --command="
           set -e
           
           # Extract deployment package
