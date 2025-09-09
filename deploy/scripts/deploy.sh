@@ -192,8 +192,14 @@ done
 if [ "$ENVIRONMENT" = "production" ]; then
     echo
     echo "Setting up automatic backups..."
-    sudo systemctl enable joomla-backup.timer 2>/dev/null || echo "Backup timer not available"
-    sudo systemctl start joomla-backup.timer 2>/dev/null || echo "Backup timer not started"
+    
+    if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+        sudo systemctl enable joomla-backup.timer 2>/dev/null && echo "Systemd backup timer enabled" || echo "Backup timer setup failed"
+        sudo systemctl start joomla-backup.timer 2>/dev/null && echo "Systemd backup timer started" || echo "Backup timer start failed"
+    else
+        echo "Using cron-based backup (already configured during setup)"
+    fi
+    
     echo "Automatic daily backups configured"
 fi
 

@@ -363,8 +363,10 @@ EOF
 
 chmod +x /opt/joomla/backup.sh
 
-# Create systemd service for automatic backups
-sudo cat > /etc/systemd/system/joomla-backup.service << 'EOF'
+# Create systemd service for automatic backups (only if systemd is available)
+if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+    echo "Creating systemd backup service..."
+    sudo cat > /etc/systemd/system/joomla-backup.service << 'EOF'
 [Unit]
 Description=Joomla Backup Service
 After=docker.service
@@ -376,7 +378,7 @@ Environment=MYSQL_ROOT_PASSWORD=%i
 ExecStart=/opt/joomla/backup.sh
 EOF
 
-sudo cat > /etc/systemd/system/joomla-backup.timer << 'EOF'
+    sudo cat > /etc/systemd/system/joomla-backup.timer << 'EOF'
 [Unit]
 Description=Run Joomla backup daily
 Requires=joomla-backup.service
@@ -389,7 +391,15 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
-sudo systemctl daemon-reload
+    sudo systemctl daemon-reload
+    echo "Systemd backup service created"
+else
+    echo "Systemd not available, setting up cron-based backup instead..."
+    
+    # Add daily backup via cron
+    (crontab -l 2>/dev/null; echo "0 3 * * * /opt/joomla/backup.sh") | crontab -
+    echo "Backup configured via cron (daily at 3 AM)"
+fi
 
 # Set up log rotation
 sudo cat > /etc/logrotate.d/joomla << 'EOF'
