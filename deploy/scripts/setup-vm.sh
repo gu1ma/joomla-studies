@@ -158,10 +158,18 @@ sudo ufw status verbose 2>/dev/null || sudo iptables -L 2>/dev/null || echo "Una
 # Configure fail2ban
 echo "Configuring fail2ban..."
 if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
-    sudo systemctl start fail2ban
-    sudo systemctl enable fail2ban
+    sudo systemctl start fail2ban 2>/dev/null && echo "Fail2ban started via systemd" || echo "Fail2ban systemd start failed"
+    sudo systemctl enable fail2ban 2>/dev/null || echo "Fail2ban systemd enable failed"
 else
-    sudo service fail2ban start 2>/dev/null || echo "Fail2ban start via service failed"
+    # Try different service management methods
+    if sudo service fail2ban start 2>/dev/null; then
+        echo "Fail2ban started via service"
+    elif sudo /etc/init.d/fail2ban start 2>/dev/null; then
+        echo "Fail2ban started via init.d"
+    else
+        echo "Fail2ban service start failed - this is OK for basic security"
+        echo "The firewall rules provide basic protection"
+    fi
 fi
 
 # Create application directories
@@ -460,21 +468,42 @@ chmod +x /opt/joomla/monitor.sh
 echo "Applying system optimizations..."
 
 # Increase file limits
-echo "* soft nofile 65536" | sudo tee -a /etc/security/limits.conf
-echo "* hard nofile 65536" | sudo tee -a /etc/security/limits.conf
+echo "Setting file limits..."
+echo "* soft nofile 65536" | sudo tee -a /etc/security/limits.conf >/dev/null
+echo "* hard nofile 65536" | sudo tee -a /etc/security/limits.conf >/dev/null
 
-# Optimize TCP settings
-cat >> /etc/sysctl.conf << 'EOF'
+# Optimize TCP settings (only set parameters that exist)
+echo "Optimizing network settings..."
 
-# Network optimizations
-net.core.rmem_max = 16777216
-net.core.wmem_max = 16777216
-net.ipv4.tcp_rmem = 4096 12582912 16777216
-net.ipv4.tcp_wmem = 4096 12582912 16777216
-net.core.netdev_max_backlog = 5000
-EOF
+# Create backup of sysctl.conf
+sudo cp /etc/sysctl.conf /etc/sysctl.conf.backup
 
-sudo sysctl -p
+# Function to safely set sysctl parameter
+set_sysctl_param() {
+    local param=$1
+    local value=$2
+    
+    if [ -f "/proc/sys/$(echo $param | tr '.' '/')" ]; then
+        echo "$param = $value" | sudo tee -a /etc/sysctl.conf >/dev/null
+        echo "Set $param = $value"
+    else
+        echo "Skipping $param (not available on this system)"
+    fi
+}
+
+# Try to set network optimizations
+echo "" | sudo tee -a /etc/sysctl.conf >/dev/null
+echo "# Joomla deployment network optimizations" | sudo tee -a /etc/sysctl.conf >/dev/null
+
+set_sysctl_param "net.core.rmem_max" "16777216"
+set_sysctl_param "net.core.wmem_max" "16777216"
+set_sysctl_param "net.ipv4.tcp_rmem" "4096 12582912 16777216"
+set_sysctl_param "net.ipv4.tcp_wmem" "4096 12582912 16777216"
+set_sysctl_param "net.core.netdev_max_backlog" "5000"
+
+# Apply settings
+echo "Applying network optimizations..."
+sudo sysctl -p 2>/dev/null || echo "Some sysctl parameters could not be applied (this is normal on some VMs)"
 
 echo "=== VM Setup Complete ==="
 echo "Please log out and log back in for group changes to take effect"
