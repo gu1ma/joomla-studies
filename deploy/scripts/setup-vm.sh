@@ -50,8 +50,41 @@ sudo usermod -aG docker $USER
 
 # Start and enable Docker
 echo "Starting Docker service..."
-sudo systemctl start docker
-sudo systemctl enable docker
+
+# Check if systemd is available
+if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+    echo "Using systemd to manage Docker..."
+    sudo systemctl start docker
+    sudo systemctl enable docker
+else
+    echo "Systemd not available, using alternative method..."
+    # Start Docker daemon manually
+    sudo dockerd &
+    sleep 5
+    # Add Docker to startup (for systems without systemd)
+    echo 'dockerd &' | sudo tee -a /etc/rc.local >/dev/null
+    sudo chmod +x /etc/rc.local
+fi
+
+# Verify Docker is running
+echo "Verifying Docker installation..."
+max_attempts=30
+attempt=0
+while [ $attempt -lt $max_attempts ]; do
+    if docker --version >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+        echo "Docker is running successfully!"
+        break
+    fi
+    attempt=$((attempt + 1))
+    echo "Waiting for Docker to start... ($attempt/$max_attempts)"
+    sleep 2
+done
+
+if [ $attempt -eq $max_attempts ]; then
+    echo "Error: Docker failed to start properly"
+    echo "Trying manual Docker start..."
+    sudo service docker start 2>/dev/null || sudo /etc/init.d/docker start 2>/dev/null || echo "Manual start failed"
+fi
 
 # Configure firewall
 echo "Configuring firewall..."
@@ -64,8 +97,12 @@ sudo ufw allow 443/tcp
 
 # Configure fail2ban
 echo "Configuring fail2ban..."
-sudo systemctl start fail2ban
-sudo systemctl enable fail2ban
+if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+    sudo systemctl start fail2ban
+    sudo systemctl enable fail2ban
+else
+    sudo service fail2ban start 2>/dev/null || echo "Fail2ban start via service failed"
+fi
 
 # Create application directories
 echo "Creating application directories..."
