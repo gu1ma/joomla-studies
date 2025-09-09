@@ -88,12 +88,72 @@ fi
 
 # Configure firewall
 echo "Configuring firewall..."
-sudo ufw --force enable
+
+# Check if IPv6 is available
+if [ -f /proc/net/if_inet6 ]; then
+    echo "IPv6 is available"
+    IPV6_AVAILABLE=true
+else
+    echo "IPv6 is not available, disabling IPv6 in UFW"
+    IPV6_AVAILABLE=false
+fi
+
+# Configure UFW to disable IPv6 if not available
+if [ "$IPV6_AVAILABLE" = false ]; then
+    sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw
+fi
+
+# Reset UFW to clean state
+sudo ufw --force reset
+
+# Configure basic UFW settings
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
+
+# Allow essential services
+echo "Allowing SSH, HTTP, and HTTPS..."
 sudo ufw allow ssh
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
+
+# Enable UFW with error handling
+echo "Enabling firewall..."
+if sudo ufw --force enable 2>/dev/null; then
+    echo "UFW enabled successfully"
+else
+    echo "UFW failed to enable, trying alternative approach..."
+    
+    # Alternative: Use iptables directly
+    echo "Setting up iptables rules as fallback..."
+    
+    # Allow established connections
+    sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+    
+    # Allow SSH (port 22)
+    sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+    
+    # Allow HTTP (port 80)
+    sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+    
+    # Allow HTTPS (port 443)
+    sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+    
+    # Allow loopback
+    sudo iptables -A INPUT -i lo -j ACCEPT
+    
+    # Drop other traffic
+    sudo iptables -A INPUT -j DROP
+    
+    # Save iptables rules (Ubuntu/Debian)
+    sudo apt-get install -y iptables-persistent 2>/dev/null || echo "iptables-persistent not available"
+    sudo netfilter-persistent save 2>/dev/null || sudo iptables-save | sudo tee /etc/iptables/rules.v4 >/dev/null
+    
+    echo "Firewall configured using iptables"
+fi
+
+# Show firewall status
+echo "Current firewall status:"
+sudo ufw status verbose 2>/dev/null || sudo iptables -L 2>/dev/null || echo "Unable to show firewall status"
 
 # Configure fail2ban
 echo "Configuring fail2ban..."
