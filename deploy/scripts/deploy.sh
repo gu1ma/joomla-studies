@@ -46,22 +46,55 @@ docker-compose down --remove-orphans 2>/dev/null || true
 
 # Check what's using port 80 and stop it
 echo "Checking port 80 usage..."
-if sudo lsof -i :80 >/dev/null 2>&1; then
-    echo "Port 80 is in use. Checking what's using it..."
-    sudo lsof -i :80
+
+# Install lsof if not present
+if ! command -v lsof >/dev/null 2>&1; then
+    echo "Installing lsof..."
+    sudo apt-get update >/dev/null 2>&1
+    sudo apt-get install -y lsof >/dev/null 2>&1
+fi
+
+# Check if port 80 is in use
+if sudo netstat -tlnp | grep :80 >/dev/null 2>&1 || sudo lsof -i :80 >/dev/null 2>&1; then
+    echo "Port 80 is in use. Clearing it..."
     
-    # Stop Apache if it's running
+    # Show what's using it
+    echo "Processes using port 80:"
+    sudo netstat -tlnp | grep :80 || true
+    sudo lsof -i :80 || true
+    
+    # Stop common web servers
     sudo systemctl stop apache2 2>/dev/null || true
     sudo service apache2 stop 2>/dev/null || true
+    sudo systemctl disable apache2 2>/dev/null || true
     
-    # Stop nginx if it's running
     sudo systemctl stop nginx 2>/dev/null || true
     sudo service nginx stop 2>/dev/null || true
+    sudo systemctl disable nginx 2>/dev/null || true
     
-    # Kill any process using port 80
+    # Stop any Docker containers using port 80
+    docker ps --format "table {{.Names}}\t{{.Ports}}" | grep ":80" | awk '{print $1}' | xargs -r docker stop 2>/dev/null || true
+    
+    # Kill any remaining processes using port 80 (more aggressive)
     sudo fuser -k 80/tcp 2>/dev/null || true
     
-    echo "Cleared port 80"
+    # Wait a moment for processes to die
+    sleep 3
+    
+    # Double check
+    if sudo netstat -tlnp | grep :80 >/dev/null 2>&1; then
+        echo "Warning: Something is still using port 80"
+        sudo netstat -tlnp | grep :80
+        # Get PID and kill it forcefully
+        PID=$(sudo netstat -tlnp | grep :80 | awk '{print $7}' | cut -d'/' -f1 | head -n1)
+        if [ ! -z "$PID" ] && [ "$PID" != "-" ]; then
+            echo "Forcefully killing PID: $PID"
+            sudo kill -9 "$PID" 2>/dev/null || true
+            sleep 2
+        fi
+    fi
+    
+    echo "Port 80 cleared"
 else
     echo "Port 80 is available"
 fi
