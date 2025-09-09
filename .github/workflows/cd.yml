@@ -93,9 +93,34 @@ jobs:
             sudo sh get-docker.sh && \
             sudo usermod -aG docker \$USER && \
             sudo mkdir -p /opt/joomla && \
-            sudo chown -R \$USER:\$USER /opt/joomla
+            sudo chown -R \$USER:\$USER /opt/joomla && \
+            sudo curl -L \"https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose && \
+            sudo chmod +x /usr/local/bin/docker-compose
           "
         fi
+        
+        # Ensure VM has necessary setup (for existing VMs)
+        echo "Ensuring VM has Docker and required directories..."
+        gcloud compute ssh joomla-server --zone=${{ env.ZONE }} --command="
+          # Install Docker if not present
+          if ! command -v docker &> /dev/null; then
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sudo sh get-docker.sh
+            sudo usermod -aG docker \$USER
+          fi
+          
+          # Install docker-compose if not present
+          if ! command -v docker-compose &> /dev/null; then
+            sudo curl -L \"https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          
+          # Create required directories
+          sudo mkdir -p /opt/joomla
+          sudo chown -R \$USER:\$USER /opt/joomla
+          
+          echo 'VM setup verified'
+        "
         
         # Get VM IP
         VM_IP=$(gcloud compute instances describe joomla-server \

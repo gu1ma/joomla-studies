@@ -33,6 +33,11 @@ echo
 
 # Set working directory
 DEPLOY_DIR="/opt/joomla"
+
+# Create directory if it doesn't exist
+sudo mkdir -p "$DEPLOY_DIR"
+sudo chown -R $USER:$USER "$DEPLOY_DIR"
+
 cd "$DEPLOY_DIR"
 
 # Stop existing containers if running
