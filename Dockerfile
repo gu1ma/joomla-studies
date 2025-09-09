@@ -51,10 +51,12 @@ RUN { \
 # Copy application files
 COPY . /var/www/html/
 
-# Set ownership and permissions
-RUN chown -R www-data:www-data /var/www/html \
+# Create necessary directories and set permissions
+RUN mkdir -p /var/www/html/cache /var/www/html/tmp /var/www/html/logs \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
-    && chmod -R 775 /var/www/html/cache /var/www/html/tmp /var/www/html/logs /var/www/html/images
+    && chmod -R 775 /var/www/html/cache /var/www/html/tmp /var/www/html/logs \
+    && if [ -d "/var/www/html/images" ]; then chmod -R 775 /var/www/html/images; fi
 
 # Create Apache configuration for Joomla
 RUN echo '<Directory /var/www/html>\n\
