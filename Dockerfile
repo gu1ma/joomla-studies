@@ -90,7 +90,8 @@ RUN echo '<Directory /var/www/html>\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>' > /etc/apache2/conf-available/joomla.conf \
-    && a2enconf joomla
+    && a2enconf joomla \
+    && echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
