@@ -1,6 +1,10 @@
 FROM php:8.2-apache
 
-# Install required PHP extensions for Joomla
+# Install Node.js 18.x LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Install required PHP extensions for Joomla 5.x
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -10,9 +14,14 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libcurl4-openssl-dev \
     libicu-dev \
+    libldap2-dev \
+    libssl-dev \
+    libsodium-dev \
     unzip \
     curl \
+    git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
     && docker-php-ext-install -j$(nproc) \
         gd \
         mysqli \
@@ -23,6 +32,14 @@ RUN apt-get update && apt-get install -y \
         curl \
         intl \
         opcache \
+        ldap \
+        sodium \
+        bcmath \
+        exif \
+        fileinfo \
+        filter \
+        json \
+        session \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache modules
@@ -66,10 +83,16 @@ RUN echo '<Directory /var/www/html>\n\
 </Directory>' > /etc/apache2/conf-available/joomla.conf \
     && a2enconf joomla
 
-# Install Composer if composer.json exists
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Build Joomla dependencies if composer.json and package.json exist
 RUN if [ -f /var/www/html/composer.json ]; then \
-        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-        && cd /var/www/html && composer install --no-dev --optimize-autoloader --no-interaction; \
+        cd /var/www/html && composer install --ignore-platform-reqs --no-dev --optimize-autoloader --no-interaction; \
+    fi
+
+RUN if [ -f /var/www/html/package.json ]; then \
+        cd /var/www/html && npm ci --only=production; \
     fi
 
 # Expose port 80
