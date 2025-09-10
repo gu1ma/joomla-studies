@@ -1,0 +1,72 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: joomla-mysql-local
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./configs/mysql-config/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    networks:
+      - joomla-network
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 60s
+    command: --default-authentication-plugin=mysql_native_password
+
+  joomla:
+    image: joomla:5.2-php8.2-apache
+    container_name: joomla-app-local
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      JOOMLA_DB_HOST: mysql
+      JOOMLA_DB_NAME: ${MYSQL_DATABASE}
+      JOOMLA_DB_USER: ${MYSQL_USER}
+      JOOMLA_DB_PASSWORD: ${MYSQL_PASSWORD}
+      JOOMLA_SITE_NAME: "Joomla Local Development"
+    volumes:
+      - .:/var/www/html/custom
+      - joomla_data:/var/www/html
+      - joomla_logs:/var/www/html/logs
+      - joomla_cache:/var/www/html/cache
+      - joomla_tmp:/var/www/html/tmp
+    networks:
+      - joomla-network
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 60s
+
+volumes:
+  mysql_data:
+    driver: local
+  joomla_data:
+    driver: local
+  joomla_logs:
+    driver: local
+  joomla_cache:
+    driver: local
+  joomla_tmp:
+    driver: local
+
+networks:
+  joomla-network:
+    driver: bridge
