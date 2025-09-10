@@ -89,8 +89,15 @@ RUN echo '<Directory /var/www/html>\n\
     Options Indexes FollowSymLinks\n\
     AllowOverride All\n\
     Require all granted\n\
-</Directory>' > /etc/apache2/conf-available/joomla.conf \
+</Directory>\n\
+\n\
+<VirtualHost *:80>\n\
+    ServerName localhost\n\
+    DocumentRoot /var/www/html\n\
+    SetEnv HTTP_HOST localhost\n\
+</VirtualHost>' > /etc/apache2/conf-available/joomla.conf \
     && a2enconf joomla \
+    && a2dissite 000-default \
     && echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 
 # Install Composer
@@ -109,6 +116,9 @@ RUN if [ -f /var/www/html/package.json ]; then \
         && npm run build:js \
         && npm prune --production; \
     fi
+
+# Fix HTTP_HOST undefined issue in Joomla
+RUN sed -i 's/\$_SERVER\['\''HTTP_HOST'\''\]/(\$_SERVER\['\''HTTP_HOST'\''\] \?\? '\''localhost'\'')/g' /var/www/html/libraries/src/Uri/Uri.php
 
 # Expose port 80
 EXPOSE 80
