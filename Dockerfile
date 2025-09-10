@@ -78,7 +78,7 @@ RUN { \
 COPY . /var/www/html/
 
 # Create necessary directories and set permissions
-RUN mkdir -p /var/www/html/cache /var/www/html/tmp /var/www/html/logs \
+RUN mkdir -p /var/www/html/cache /var/www/html/tmp /var/www/html/logs /var/www/html/media/vendor \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/cache /var/www/html/tmp /var/www/html/logs \
@@ -100,8 +100,13 @@ RUN if [ -f /var/www/html/composer.json ]; then \
         cd /var/www/html && composer install --ignore-platform-reqs --no-dev --optimize-autoloader --no-interaction; \
     fi
 
+# Install npm dependencies and build frontend assets for Joomla
 RUN if [ -f /var/www/html/package.json ]; then \
-        cd /var/www/html && npm ci --only=production; \
+        cd /var/www/html \
+        && npm ci \
+        && npm run build:css \
+        && npm run build:js \
+        && npm prune --production; \
     fi
 
 # Expose port 80
