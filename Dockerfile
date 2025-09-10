@@ -4,7 +4,7 @@ FROM php:8.2-apache
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Install required PHP extensions for Joomla 5.x
+# Install system dependencies first
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -20,27 +20,36 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     git \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
-    && docker-php-ext-install -j$(nproc) \
-        gd \
-        mysqli \
-        pdo_mysql \
-        zip \
-        xml \
-        mbstring \
-        curl \
-        intl \
-        opcache \
-        ldap \
-        sodium \
-        bcmath \
-        exif \
-        fileinfo \
-        filter \
-        json \
-        session \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure and install PHP extensions one by one for better error handling
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install -j$(nproc) gd
+
+RUN docker-php-ext-install -j$(nproc) mysqli
+RUN docker-php-ext-install -j$(nproc) pdo_mysql
+RUN docker-php-ext-install -j$(nproc) zip
+RUN docker-php-ext-install -j$(nproc) xml
+RUN docker-php-ext-install -j$(nproc) mbstring
+RUN docker-php-ext-install -j$(nproc) curl
+
+# Install intl extension
+RUN docker-php-ext-install -j$(nproc) intl
+
+# Install OPcache
+RUN docker-php-ext-install -j$(nproc) opcache
+
+# Configure and install LDAP
+RUN docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/
+RUN docker-php-ext-install -j$(nproc) ldap
+
+# Install remaining extensions
+RUN docker-php-ext-install -j$(nproc) sodium
+RUN docker-php-ext-install -j$(nproc) bcmath
+RUN docker-php-ext-install -j$(nproc) exif
+
+# These extensions are already enabled by default in PHP 8.2
+# fileinfo, filter, json, session - no need to install
 
 # Enable Apache modules
 RUN a2enmod rewrite headers
